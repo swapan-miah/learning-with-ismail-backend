@@ -10,7 +10,7 @@ const cloudinary = require("cloudinary").v2;
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./tmp/");
+    cb(null, "/tmp/");
   },
   filename: function (req, file, cb) {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -170,10 +170,19 @@ async function run() {
         const cross_matching_backend_key = `${process.env.Front_Backend_Key}`;
         const cross_matching_frontend_key = req.body.crose_maching_key;
         if (cross_matching_backend_key === cross_matching_frontend_key) {
-          console.log("I am from portfolio update");
-
           const paramsId = req.params.id;
-          console.log(paramsId);
+
+          const query = { _id: new ObjectId(paramsId) };
+          const result = await portfolioCollection.findOne(query);
+
+          let imgValue = result?.img;
+
+          if (req.file?.path) {
+            const uploadResult = await cloudinary.uploader.upload(
+              req.file.path
+            );
+            imgValue = uploadResult?.secure_url;
+          }
 
           const filter = { _id: new ObjectId(paramsId) };
           const options = { upsert: true };
@@ -198,7 +207,8 @@ async function run() {
               cloudinaryEmail: req.body?.cloudinaryEmail || " ",
               f_env: req.body?.f_env || " ",
               b_env: req.body?.b_env || " ",
-              others: req.body?.othersn || " ",
+              others: req.body?.others || " ",
+              img: imgValue,
             },
           };
 
