@@ -10,7 +10,7 @@ const cloudinary = require("cloudinary").v2;
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "/tmp/");
+    cb(null, "./tmp/");
   },
   filename: function (req, file, cb) {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -111,6 +111,31 @@ async function run() {
       }
     });
 
+    // find single  portfolio
+    app.get("/portfolio-info/:id", async (req, res) => {
+      try {
+        const crose_maching_backend_key = process.env.Front_Backend_Key;
+        const crose_maching_frontend_key =
+          req.headers.authorization?.split(" ")[1];
+
+        if (crose_maching_backend_key === crose_maching_frontend_key) {
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await portfolioCollection.findOne(query);
+          res.send(result);
+        } else {
+          res.status(403).send({
+            message: "Forbidden: Invalid Key",
+          });
+        }
+      } catch (error) {
+        res.status(500).send({
+          message: "An error occurred while fetching data.",
+          error,
+        });
+      }
+    });
+
     // ------------------ add teachers---------------------
     app.post("/portfolio-upload", upload.single("img"), async (req, res) => {
       try {
@@ -127,7 +152,7 @@ async function run() {
           const protfolio = {
             title,
             link,
-            image: uploadResult.secure_url,
+            img: uploadResult.secure_url,
           };
 
           const Info = await portfolioCollection.insertOne(protfolio);
@@ -138,6 +163,64 @@ async function run() {
         res.status(500).send("Server Error");
       }
     });
+
+    // update product info
+    app.put("/portfolio-update/:id", upload.single("img"), async (req, res) => {
+      try {
+        const cross_matching_backend_key = `${process.env.Front_Backend_Key}`;
+        const cross_matching_frontend_key = req.body.crose_maching_key;
+        if (cross_matching_backend_key === cross_matching_frontend_key) {
+          console.log("I am from portfolio update");
+
+          const paramsId = req.params.id;
+          console.log(paramsId);
+
+          const filter = { _id: new ObjectId(paramsId) };
+          const options = { upsert: true };
+          const updateDoc = {
+            $set: {
+              projectName: req.body?.projectName || " ",
+              title: req.body?.title || " ",
+              link: req.body?.link || " ",
+              domain: req.body?.domain || " ",
+              domainProvider: req.body?.domainProvider || " ",
+              hosting: req.body?.hosting || " ",
+              hostingProvider: req.body?.hostingProvider || " ",
+              frontendGitBranch: req.body?.frontendGitBranch || " ",
+              backendGitBranch: req.body?.backendGitBranch || " ",
+              frontendGithubRepository:
+                req.body?.frontendGithubRepository || " ",
+              backendGithubRepository: req.body?.backendGithubRepository || " ",
+              databaseEmail: req.body?.databaseEmail || " ",
+              databaseName: req.body?.databaseName || " ",
+              firebaseEmail: req.body?.firebaseEmail || " ",
+              firebaseProjectName: req.body?.firebaseProjectName || " ",
+              cloudinaryEmail: req.body?.cloudinaryEmail || " ",
+              f_env: req.body?.f_env || " ",
+              b_env: req.body?.b_env || " ",
+              others: req.body?.othersn || " ",
+            },
+          };
+
+          const data = req.body;
+          console.log(data);
+
+          // Update the document in the collection
+          const updateResult = await portfolioCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+          res.send(updateResult);
+        } else {
+          res.status(403).send("Unauthorized access for portfolio-update");
+        }
+      } catch (error) {
+        console.error("Error handling portfolio-update:", error);
+        res.status(500).send(" Error handling portfolio-update Server Error");
+      }
+    });
+
     // delete single portfolio
     app.delete("/delete-portfolio/:id", async (req, res) => {
       try {
