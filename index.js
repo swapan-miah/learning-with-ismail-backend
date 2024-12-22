@@ -208,6 +208,8 @@ async function run() {
               f_env: req.body?.f_env || " ",
               b_env: req.body?.b_env || " ",
               others: req.body?.others || " ",
+              problem: req.body?.problem || " ",
+              task: req.body?.task || " ",
               img: imgValue,
             },
           };
