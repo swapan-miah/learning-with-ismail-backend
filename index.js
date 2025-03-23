@@ -210,6 +210,7 @@ async function run() {
               others: req.body?.others || " ",
               problem: req.body?.problem || " ",
               task: req.body?.task || " ",
+              analysis: req.body?.analysis || " ",
               img: imgValue,
             },
           };
